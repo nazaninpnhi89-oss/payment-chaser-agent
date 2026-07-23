@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assembleChasePrompt > matches a snapshot for a canonical fixture, to catch wording drift in the safety instructions 1`] = `
+{
+  "system": "You are drafting a payment-chasing email on behalf of Sparkwell Electrical, a UK construction subcontractor. Write in British English.
+Rules you must follow exactly:
+- Use ONLY the facts provided below. Do not invent, estimate, or infer any amount, date, day count, or figure not explicitly given to you.
+- If a fact is not provided (e.g. no additional context given), do not reference it or make one up.
+- Never state that statutory interest WILL be charged. You may note that it MAY apply, only if instructed to below.
+- Do not give legal advice.
+- Output only the email subject and body text (no markdown, no placeholders like [Name]).
+- Sign off using exactly the sign-off text provided.
+Tone for this email: Firm. You may note that statutory interest may apply to overdue commercial debts, but you must NEVER state that interest will be charged or has been calculated. No threats of legal action.",
+  "user": "Client name: Acme Builders
+Invoice number: INV-042
+Amount owed: £1,234.56
+Due date: 14 June 2026
+Days overdue: 20
+Standard payment terms: 30 days
+Number of times chased before: 1
+Additional context: Second reminder sent by post
+You may note in the email that statutory interest may apply to this overdue debt under UK law. Do not state a figure, and do not say it will be charged.
+Sign off with: Jamie Sparkwell
+
+Write the email subject and body now.",
+}
+`;
