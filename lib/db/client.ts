@@ -1,22 +1,17 @@
 import "server-only";
-import { drizzle as drizzleVercel } from "drizzle-orm/vercel-postgres";
-import { drizzle as drizzlePostgresJs } from "drizzle-orm/postgres-js";
-import { sql as vercelSql } from "@vercel/postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@/lib/db/schema";
 
 /**
- * Local dev uses plain Postgres via the postgres-js driver against
- * DATABASE_URL; Vercel deployments use @vercel/postgres. Selected by the
- * VERCEL env var Vercel sets automatically, so no manual switch is needed per
- * environment.
+ * Plain postgres-js driver against DATABASE_URL, used both locally and in
+ * production — this works against any standard Postgres connection string
+ * (local Postgres, Supabase, Neon, Vercel Postgres, etc.), not just a
+ * Vercel-specific product. `prepare: false` is required when DATABASE_URL
+ * points at a connection pooler (e.g. Supabase's "Transaction" pooler on
+ * port 6543, or PgBouncer generally), which doesn't support prepared
+ * statements — harmless against a direct connection too.
  */
-function createDb() {
-  if (process.env.VERCEL) {
-    return drizzleVercel(vercelSql, { schema });
-  }
-  const client = postgres(process.env.DATABASE_URL as string);
-  return drizzlePostgresJs(client, { schema });
-}
+const client = postgres(process.env.DATABASE_URL as string, { prepare: false });
 
-export const db = createDb();
+export const db = drizzle(client, { schema });

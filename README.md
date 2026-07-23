@@ -15,13 +15,15 @@ npm run db:seed              # inserts the default organisation
 npm run dev
 ```
 
-Requires a Postgres database reachable at `DATABASE_URL` (local Postgres in
-development; Vercel Postgres in production, selected automatically via the
-`VERCEL` env var). This was not available to verify end-to-end in the
-environment this was built in — walk the golden path yourself before
-considering the app done: import a CSV, confirm the dashboard shows correct
-tiers/amounts, generate a draft, preview it, and test both
-`SENDING_ENABLED` states.
+Requires a Postgres database reachable at `DATABASE_URL` — any standard
+Postgres works (local Postgres, Supabase, Neon, Vercel Postgres). The db
+client (`lib/db/client.ts`) just uses `postgres-js` against the connection
+string, with `prepare: false` set so it's also safe against a connection
+pooler (e.g. Supabase's "Transaction" pooler on port 6543). This was not
+available to verify end-to-end in the environment this was built in — walk
+the golden path yourself before considering the app done: import a CSV,
+confirm the dashboard shows correct tiers/amounts, generate a draft, preview
+it, and test both `SENDING_ENABLED` states.
 
 ## Environment variables
 
