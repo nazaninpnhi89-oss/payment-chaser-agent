@@ -22,6 +22,11 @@ const envSchema = z.object({
     .string()
     .optional()
     .transform((value) => (value && value.trim() !== "" ? value.trim() : null)),
+  NEXT_PUBLIC_APP_URL: z.string().min(1).default("http://localhost:3000"),
+  // Authenticates the weekly-reminder cron endpoint (app/api/cron/weekly-reminder).
+  // Vercel automatically sends `Authorization: Bearer $CRON_SECRET` when
+  // invoking Cron Jobs if this env var is set on the project.
+  CRON_SECRET: z.string().min(1),
 });
 
 export const env = envSchema.parse({
@@ -33,4 +38,6 @@ export const env = envSchema.parse({
   RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
   SENDING_ENABLED: process.env.SENDING_ENABLED,
   TEST_REDIRECT_EMAIL: process.env.TEST_REDIRECT_EMAIL,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  CRON_SECRET: process.env.CRON_SECRET,
 });

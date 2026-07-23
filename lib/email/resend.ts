@@ -3,15 +3,15 @@ import { Resend } from "resend";
 import { env } from "@/lib/env";
 import { checkChaseEmailSafety } from "@/lib/email/safety";
 
-export type SendChaseEmailInput = {
-  to: string; // intended recipient, from invoice.clientEmail
+export type SendEmailInput = {
+  to: string; // intended recipient
   subject: string;
   bodyText: string;
   bodyHtml: string;
   replyTo: string;
 };
 
-export type SendChaseEmailResult =
+export type SendEmailResult =
   | { dispatched: true; providerId: string; actualRecipient: string; subjectSent: string }
   | { dispatched: false; reason: "sending_disabled"; renderedPreview: { subject: string; html: string } }
   | { dispatched: false; reason: "blocked_by_safety_check"; matchedPattern: string }
@@ -19,7 +19,12 @@ export type SendChaseEmailResult =
 
 const resendClient = new Resend(env.RESEND_API_KEY);
 
-export async function sendChaseEmail(input: SendChaseEmailInput): Promise<SendChaseEmailResult> {
+/**
+ * Shared transport: kill switch, then test redirect, then the actual Resend
+ * call. Used by both sendChaseEmail and sendReminderEmail so the safety
+ * behaviour lives in exactly one place.
+ */
+async function dispatchEmail(input: SendEmailInput): Promise<SendEmailResult> {
   // Kill switch first, before any other logic — SENDING_ENABLED=false means
   // "log and return the full rendered preview, dispatch nothing," full stop.
   if (!env.SENDING_ENABLED) {
@@ -32,17 +37,6 @@ export async function sendChaseEmail(input: SendChaseEmailInput): Promise<SendCh
       reason: "sending_disabled",
       renderedPreview: { subject: input.subject, html: input.bodyHtml },
     };
-  }
-
-  // Belt-and-braces safety net: block dispatch if the drafted body slipped
-  // past the prompt instruction and asserts interest WILL be charged.
-  const safetyCheck = checkChaseEmailSafety(input.bodyText);
-  if (!safetyCheck.safe) {
-    console.error("[safety] Blocked send: drafted email failed the keyword guard", {
-      to: input.to,
-      matchedPattern: safetyCheck.matchedPattern,
-    });
-    return { dispatched: false, reason: "blocked_by_safety_check", matchedPattern: safetyCheck.matchedPattern };
   }
 
   // Test redirect: applies to ALL outbound mail once sending is enabled.
@@ -76,4 +70,47 @@ export async function sendChaseEmail(input: SendChaseEmailInput): Promise<SendCh
       error: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+export type SendChaseEmailInput = SendEmailInput; // to = invoice.clientEmail
+export type SendChaseEmailResult = SendEmailResult;
+
+export async function sendChaseEmail(input: SendChaseEmailInput): Promise<SendChaseEmailResult> {
+  // Belt-and-braces safety net, specific to LLM-drafted chase content: block
+  // dispatch if the drafted body slipped past the prompt instruction and
+  // asserts interest WILL be charged. Only relevant once sending is enabled
+  // — dispatchEmail's own kill-switch check already blocks everything
+  // otherwise.
+  if (env.SENDING_ENABLED) {
+    const safetyCheck = checkChaseEmailSafety(input.bodyText);
+    if (!safetyCheck.safe) {
+      console.error("[safety] Blocked send: drafted email failed the keyword guard", {
+        to: input.to,
+        matchedPattern: safetyCheck.matchedPattern,
+      });
+      return {
+        dispatched: false,
+        reason: "blocked_by_safety_check",
+        matchedPattern: safetyCheck.matchedPattern,
+      };
+    }
+  }
+
+  return dispatchEmail(input);
+}
+
+export type SendReminderEmailInput = SendEmailInput; // to = organisation.replyToEmail
+export type SendReminderEmailResult = SendEmailResult;
+
+/**
+ * Sends the weekly "you have N invoices to review" notification to the
+ * business owner themselves — never a client. This is a static, non-LLM
+ * template, so it doesn't run the chase-specific keyword guard, and it is
+ * never logged to chase_logs (that table is for actual client-facing
+ * chases only).
+ */
+export async function sendReminderEmail(
+  input: SendReminderEmailInput,
+): Promise<SendReminderEmailResult> {
+  return dispatchEmail(input);
 }

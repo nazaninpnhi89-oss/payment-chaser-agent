@@ -39,6 +39,17 @@ See `.env.example`. Notable ones:
   table row carries this as `organisationId`; when auth is added later, this
   is the one thing that changes (see "Multi-tenant readiness" below).
 
+## Weekly reminder (not auto-send)
+
+`app/api/cron/weekly-reminder/route.ts`, scheduled via `vercel.json`
+(`0 8 * * 1`, Monday 08:00 UTC), sends the organisation's own reply-to email a
+summary of how many overdue invoices are waiting — e.g. "11 invoices need
+chasing this week". It never drafts or dispatches a chase email itself; it
+only nudges a human to log in and go through the normal generate/preview/send
+flow, so it doesn't touch the "no auto-send" rule. Authenticated via
+`CRON_SECRET` — Vercel sends `Authorization: Bearer $CRON_SECRET`
+automatically when invoking Cron Jobs if that env var is set on the project.
+
 ## Updating the statutory interest base rate
 
 `lib/constants.ts` holds `BASE_RATE_PERCENT`, the Bank of England base rate
