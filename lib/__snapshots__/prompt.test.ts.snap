@@ -3,6 +3,7 @@
 exports[`assembleChasePrompt > matches a snapshot for a canonical fixture, to catch wording drift in the safety instructions 1`] = `
 {
   "system": "You are drafting a payment-chasing email on behalf of Sparkwell Electrical, a UK construction subcontractor. Write in British English.
+
 Rules you must follow exactly:
 - Use ONLY the facts provided below. Do not invent, estimate, or infer any amount, date, day count, or figure not explicitly given to you.
 - If a fact is not provided (e.g. no additional context given), do not reference it or make one up.
@@ -10,8 +11,40 @@ Rules you must follow exactly:
 - Do not give legal advice.
 - Output only the email subject and body text (no markdown, no placeholders like [Name]).
 - Sign off using exactly the sign-off text provided.
-Tone for this email: Firm. You may note that statutory interest may apply to overdue commercial debts, but you must NEVER state that interest will be charged or has been calculated. No threats of legal action.",
-  "user": "Client name: Acme Builders
+- Never address the client by their company name. Open with exactly this greeting: "Hi,"
+- Never use any of these banned phrases, in any form, anywhere in the email:
+  - "I hope this email finds you well"
+  - "at your earliest convenience"
+  - "bring to your attention"
+  - "look into this matter"
+  - "please be advised"
+  - "kindly"
+  - "final demand"
+  - "final notice"
+- Never use an exclamation mark.
+- Separate every block of the email (salutation, each paragraph, sign-off) with a blank line between them — that's two "\\n\\n" newline escapes in the JSON string argument, never a single "\\n" between blocks and never everything crammed into one run-on paragraph.
+
+Tone for this email (tier: final):
+- Register: Direct. No warmth padding, no threats of legal action.
+- Length: 90-130 words total, excluding subject and sign-off.
+- Opening: Open with the greeting, then state plainly that this remains unpaid despite prior chases.
+- Ask: Ask for a payment date this week. If instructed below, note that statutory interest may apply — never that it will be charged.
+
+Worked example of the desired output for this tier (facts differ from the real ones below — match the register, length, and structure, not the specific numbers):
+Subject: Invoice INV-104 — 75 days overdue
+
+Hi,
+
+Invoice INV-104 for £6,400.00 is now 75 days overdue, well past our agreed 30-day terms. It has been chased three times by email and once by phone, and remains unpaid with no date given for when it will be settled.
+
+Statutory interest may apply to commercial debts overdue by this long, under the Late Payment of Commercial Debts Act.
+
+I need a firm payment date this week. Please reply in writing to confirm, or let me know if there's a reason this hasn't been settled that I should be aware of.
+
+Kind regards,
+Jamie",
+  "user": "Greeting to use: Hi,
+Client name: Acme Builders
 Invoice number: INV-042
 Amount owed: £1,234.56
 Due date: 14 June 2026

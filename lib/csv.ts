@@ -5,6 +5,7 @@ export type CanonicalField =
   | "invoiceNumber"
   | "clientName"
   | "clientEmail"
+  | "contactFirstName"
   | "amount"
   | "issueDate"
   | "dueDate"
@@ -14,6 +15,7 @@ export const CANONICAL_FIELDS: CanonicalField[] = [
   "invoiceNumber",
   "clientName",
   "clientEmail",
+  "contactFirstName",
   "amount",
   "issueDate",
   "dueDate",
@@ -37,6 +39,7 @@ export type NormalisedInvoiceInput = {
   invoiceNumber: string;
   clientName: string;
   clientEmail: string | null;
+  contactFirstName: string | null;
   amount: number; // pence
   issueDate: Date;
   dueDate: Date;
@@ -82,6 +85,7 @@ const FIELD_ALIASES: Record<CanonicalField, string[]> = {
   invoiceNumber: ["invoice number", "invoicenumber", "invoice_number", "invoice no", "invoice #", "invoice", "ref", "reference"],
   clientName: ["client name", "clientname", "client_name", "client", "contact", "contact name", "customer", "customer name", "name"],
   clientEmail: ["client email", "clientemail", "client_email", "contact email", "customer email", "email"],
+  contactFirstName: ["first name", "firstname", "first_name", "contact first name", "contact firstname"],
   amount: ["amount", "total", "invoice amount", "value", "balance", "amount due", "outstanding"],
   issueDate: ["issue date", "issuedate", "issue_date", "invoice date", "date"],
   dueDate: ["due date", "duedate", "due_date", "payment due", "payment due date"],
@@ -221,6 +225,7 @@ export function normaliseCsvRows(rows: CsvImportRow[]): CsvImportResult {
     }
 
     const notes = row.notes?.trim() || null;
+    const contactFirstName = row.contactFirstName?.trim() || null;
 
     if (rowErrors.length > 0) {
       errors.push({ rowNumber: index + 2, errors: rowErrors, raw: row }); // +2: 1-indexed + header row
@@ -231,6 +236,7 @@ export function normaliseCsvRows(rows: CsvImportRow[]): CsvImportResult {
       invoiceNumber: invoiceNumber as string,
       clientName: clientName as string,
       clientEmail,
+      contactFirstName,
       amount: amount as number,
       issueDate: issueDate as Date,
       dueDate: dueDate as Date,

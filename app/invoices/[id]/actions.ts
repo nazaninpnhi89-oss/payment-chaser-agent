@@ -1,47 +1,26 @@
 "use server";
 
-import { format } from "date-fns";
 import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
-import { getInvoiceView } from "@/lib/repositories/invoiceRepository";
-import { getOrganisation } from "@/lib/repositories/organisationRepository";
+import { getInvoiceView, updateInvoiceContactFirstName } from "@/lib/repositories/invoiceRepository";
 import { createChaseLog } from "@/lib/repositories/chaseLogRepository";
-import { formatPence } from "@/lib/money";
-import type { VerifiedFacts } from "@/lib/prompt";
-import { generateChaseDraft, type ChaseDraft } from "@/lib/llm/draft";
+import { getOrganisation } from "@/lib/repositories/organisationRepository";
 import { renderChaseEmail } from "@/lib/email/render";
+import { normalizeChaseEmailBody } from "@/lib/email/normalize";
 import { sendChaseEmail } from "@/lib/email/resend";
+import { generateChaseDraft, type ChaseDraft } from "@/lib/llm/draft";
+import { buildVerifiedFacts } from "@/lib/verifiedFacts";
 
 export type GenerateDraftResult =
   | { success: true; draft: ChaseDraft }
   | { success: false; error: string };
 
 export async function generateDraftAction(invoiceId: string): Promise<GenerateDraftResult> {
-  const invoiceView = await getInvoiceView(env.DEFAULT_ORG_ID, invoiceId);
-  if (!invoiceView || invoiceView.tier === null) {
-    return { success: false, error: "This invoice is not overdue and cannot be chased." };
-  }
-
-  const organisation = await getOrganisation(env.DEFAULT_ORG_ID);
-
-  const facts: VerifiedFacts = {
-    clientName: invoiceView.clientName,
-    invoiceNumber: invoiceView.invoiceNumber,
-    amountFormatted: formatPence(invoiceView.amount),
-    daysOverdue: invoiceView.daysOverdue,
-    dueDateFormatted: format(invoiceView.dueDate, "d MMMM yyyy"),
-    tier: invoiceView.tier,
-    standardPaymentTermsDays: organisation.standardPaymentTermsDays,
-    statutoryInterestMayApply: invoiceView.tier === "final",
-    businessName: organisation.businessName,
-    senderName: organisation.senderName,
-    emailSignOff: organisation.emailSignOff,
-    chaseCount: invoiceView.chaseCount,
-    notes: invoiceView.notes,
-  };
+  const factsResult = await buildVerifiedFacts(invoiceId);
+  if (!factsResult.success) return factsResult;
 
   try {
-    const draft = await generateChaseDraft(facts);
+    const draft = await generateChaseDraft(factsResult.facts);
     return { success: true, draft };
   } catch (error) {
     return {
@@ -49,6 +28,14 @@ export async function generateDraftAction(invoiceId: string): Promise<GenerateDr
       error: error instanceof Error ? error.message : "Failed to generate draft.",
     };
   }
+}
+
+export async function updateContactFirstNameAction(
+  invoiceId: string,
+  contactFirstName: string,
+): Promise<void> {
+  await updateInvoiceContactFirstName(env.DEFAULT_ORG_ID, invoiceId, contactFirstName.trim() || null);
+  revalidatePath(`/invoices/${invoiceId}`);
 }
 
 export type SendChaseResult =
@@ -68,7 +55,10 @@ export async function sendChaseAction(
   }
 
   const organisation = await getOrganisation(env.DEFAULT_ORG_ID);
-  const { bodyHtml, bodyText } = renderChaseEmail(draft.body);
+  // Re-normalise here too, not just at generation time — the user may have
+  // hand-edited the body in the preview textarea before approving it.
+  const normalisedBody = normalizeChaseEmailBody(draft.body, organisation.senderName);
+  const { bodyHtml, bodyText } = renderChaseEmail(normalisedBody);
 
   const result = await sendChaseEmail({
     to: invoiceView.clientEmail,
@@ -82,7 +72,7 @@ export async function sendChaseAction(
     invoiceId,
     tier: invoiceView.tier,
     subject: draft.subject,
-    body: draft.body,
+    body: normalisedBody,
     recipientEmail: invoiceView.clientEmail,
     status: result.dispatched ? "sent" : result.reason === "sending_disabled" ? "previewed" : "failed",
     errorMessage: result.dispatched

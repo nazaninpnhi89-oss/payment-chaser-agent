@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { assembleChasePrompt, type VerifiedFacts } from "@/lib/prompt";
+import { assembleChasePrompt, checkBannedPhrases, greetingFor, type VerifiedFacts } from "@/lib/prompt";
 
 function facts(overrides: Partial<VerifiedFacts> = {}): VerifiedFacts {
   return {
     clientName: "Acme Builders",
+    contactFirstName: null,
     invoiceNumber: "INV-042",
     amountFormatted: "£1,234.56",
     daysOverdue: 20,
@@ -36,7 +37,7 @@ describe("assembleChasePrompt", () => {
     const { system, user } = assembleChasePrompt(
       facts({ tier: "final", statutoryInterestMayApply: true }),
     );
-    expect(system).toMatch(/never state that interest will be charged/i);
+    expect(system).toMatch(/never state that (?:statutory )?interest will be charged/i);
     expect(user).toMatch(/may apply/i);
     // The instruction legitimately mentions the forbidden phrase while telling
     // the model not to use it ("do not say it will be charged") — what matters
@@ -74,5 +75,44 @@ describe("assembleChasePrompt", () => {
       facts({ tier: "final", statutoryInterestMayApply: true, notes: "Second reminder sent by post" }),
     );
     expect(result).toMatchSnapshot();
+  });
+
+  it("never addresses the client by company name, using the contact first name when known", () => {
+    const { system, user } = assembleChasePrompt(facts({ contactFirstName: "Sam" }));
+    expect(greetingFor({ contactFirstName: "Sam" })).toBe("Hi Sam,");
+    expect(system).toContain('Open with exactly this greeting: "Hi Sam,"');
+    expect(user).toContain("Greeting to use: Hi Sam,");
+    expect(system).not.toContain(facts().clientName);
+  });
+
+  it("falls back to a bare 'Hi,' when no contact first name is known", () => {
+    const { system, user } = assembleChasePrompt(facts({ contactFirstName: null }));
+    expect(greetingFor({ contactFirstName: null })).toBe("Hi,");
+    expect(system).toContain('Open with exactly this greeting: "Hi,"');
+    expect(user).toContain("Greeting to use: Hi,");
+  });
+
+  it("lists every banned phrase in the system prompt", () => {
+    const { system } = assembleChasePrompt(facts());
+    expect(system).toContain('"I hope this email finds you well"');
+    expect(system).toContain('"at your earliest convenience"');
+    expect(system).toContain("Never use an exclamation mark.");
+  });
+});
+
+describe("checkBannedPhrases", () => {
+  it("flags a banned phrase regardless of case", () => {
+    const result = checkBannedPhrases("I HOPE THIS EMAIL FINDS YOU WELL, please pay.");
+    expect(result).toEqual({ ok: false, violation: 'the banned phrase "I hope this email finds you well"' });
+  });
+
+  it("flags an exclamation mark", () => {
+    const result = checkBannedPhrases("Please pay this invoice today!");
+    expect(result).toEqual({ ok: false, violation: "an exclamation mark" });
+  });
+
+  it("passes clean text", () => {
+    const result = checkBannedPhrases("Hi Sam. Invoice INV-042 is now overdue. Could you confirm a date?");
+    expect(result).toEqual({ ok: true });
   });
 });

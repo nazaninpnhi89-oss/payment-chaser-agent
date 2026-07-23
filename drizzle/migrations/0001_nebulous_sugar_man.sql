@@ -1,0 +1,1 @@
+ALTER TABLE "invoices" ADD COLUMN "contact_first_name" varchar(100);

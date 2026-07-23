@@ -26,6 +26,7 @@ const FIELD_LABELS: Record<CanonicalField, string> = {
   invoiceNumber: "Invoice number",
   clientName: "Client name",
   clientEmail: "Client email",
+  contactFirstName: "Contact first name",
   amount: "Amount",
   issueDate: "Issue date",
   dueDate: "Due date",

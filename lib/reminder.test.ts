@@ -9,6 +9,7 @@ function invoiceView(tier: InvoiceView["tier"]): InvoiceView {
     invoiceNumber: "INV-1",
     clientName: "Client",
     clientEmail: null,
+    contactFirstName: null,
     amount: 1000,
     issueDate: new Date(),
     dueDate: new Date(),

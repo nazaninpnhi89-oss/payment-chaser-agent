@@ -8,6 +8,7 @@ export type Invoice = {
   invoiceNumber: string;
   clientName: string;
   clientEmail: string | null;
+  contactFirstName: string | null;
   amount: number; // GBP, stored in pence as integer
   issueDate: Date;
   dueDate: Date;

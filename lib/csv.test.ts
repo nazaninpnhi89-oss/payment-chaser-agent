@@ -13,6 +13,7 @@ function row(overrides: Partial<CsvImportRow> = {}): CsvImportRow {
     invoiceNumber: "INV-001",
     clientName: "Acme Builders",
     clientEmail: "billing@acme.example",
+    contactFirstName: "Sam",
     amount: "1234.56",
     issueDate: "2026-01-01",
     dueDate: "2026-01-31",
@@ -66,6 +67,17 @@ describe("normaliseCsvRows", () => {
   it("normalises an absent notes to null", () => {
     const { validRows } = normaliseCsvRows([row({ notes: undefined })]);
     expect(validRows[0]?.notes).toBeNull();
+  });
+
+  it("normalises an absent contactFirstName to null, since it's optional", () => {
+    const { validRows, errors } = normaliseCsvRows([row({ contactFirstName: undefined })]);
+    expect(errors).toEqual([]);
+    expect(validRows[0]?.contactFirstName).toBeNull();
+  });
+
+  it("carries a provided contactFirstName through", () => {
+    const { validRows } = normaliseCsvRows([row({ contactFirstName: "Priya" })]);
+    expect(validRows[0]?.contactFirstName).toBe("Priya");
   });
 
   it("rejects a malformed clientEmail at import time", () => {

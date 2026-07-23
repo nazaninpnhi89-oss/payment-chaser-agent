@@ -120,6 +120,7 @@ export async function createInvoicesFromImport(
         invoiceNumber: input.invoiceNumber,
         clientName: input.clientName,
         clientEmail: input.clientEmail,
+        contactFirstName: input.contactFirstName,
         amount: input.amount,
         issueDate: input.issueDate,
         dueDate: input.dueDate,
@@ -127,6 +128,20 @@ export async function createInvoicesFromImport(
       })),
     )
     .returning();
+}
+
+export async function updateInvoiceContactFirstName(
+  organisationId: string,
+  invoiceId: string,
+  contactFirstName: string | null,
+): Promise<Invoice> {
+  const [row] = await db
+    .update(invoices)
+    .set({ contactFirstName, updatedAt: new Date() })
+    .where(and(eq(invoices.organisationId, organisationId), eq(invoices.id, invoiceId)))
+    .returning();
+  if (!row) throw new Error(`Invoice ${invoiceId} not found`);
+  return row;
 }
 
 export async function updateInvoiceStatus(

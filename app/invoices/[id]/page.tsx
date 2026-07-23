@@ -6,6 +6,8 @@ import { formatPence } from "@/lib/money";
 import { TierBadge } from "@/components/tier-badge";
 import { InterestDisclaimer } from "@/components/interest-disclaimer";
 import { ChasePreviewDialog } from "@/components/chase-preview-dialog";
+import { ContactFirstNameField } from "@/components/contact-first-name-field";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -62,6 +64,12 @@ export default async function InvoiceDetailPage({
           <div>
             <p className="text-muted-foreground">Times chased</p>
             <p className="font-medium">{invoice.chaseCount}</p>
+          </div>
+          <div>
+            <Label htmlFor="contact-first-name" className="text-muted-foreground">
+              Contact first name
+            </Label>
+            <ContactFirstNameField invoiceId={invoice.id} initialValue={invoice.contactFirstName} />
           </div>
         </CardContent>
       </Card>

@@ -14,9 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InterestDisclaimer } from "@/components/interest-disclaimer";
 import { generateDraftAction, sendChaseAction } from "@/app/invoices/[id]/actions";
 import type { ChaseDraft } from "@/lib/llm/draft";
+import { renderChaseEmail } from "@/lib/email/render";
 
 export function ChasePreviewDialog({
   invoiceId,
@@ -89,15 +91,28 @@ export function ChasePreviewDialog({
                   onChange={(event) => setDraft({ ...draft, subject: event.target.value })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="chase-body">Body</Label>
-                <Textarea
-                  id="chase-body"
-                  rows={10}
-                  value={draft.body}
-                  onChange={(event) => setDraft({ ...draft, body: event.target.value })}
-                />
-              </div>
+              <Tabs defaultValue="text">
+                <TabsList>
+                  <TabsTrigger value="text">Plain text</TabsTrigger>
+                  <TabsTrigger value="html">HTML preview</TabsTrigger>
+                </TabsList>
+                <TabsContent value="text" className="space-y-2">
+                  <Label htmlFor="chase-body">Body</Label>
+                  <Textarea
+                    id="chase-body"
+                    rows={10}
+                    className="whitespace-pre-wrap"
+                    value={draft.body}
+                    onChange={(event) => setDraft({ ...draft, body: event.target.value })}
+                  />
+                </TabsContent>
+                <TabsContent value="html">
+                  <div
+                    className="rounded-lg border border-input p-3 text-sm"
+                    dangerouslySetInnerHTML={{ __html: renderChaseEmail(draft.body).bodyHtml }}
+                  />
+                </TabsContent>
+              </Tabs>
               <InterestDisclaimer {...interest} />
             </div>
           )}

@@ -28,6 +28,7 @@ export const invoices = pgTable(
     invoiceNumber: varchar("invoice_number", { length: 100 }).notNull(),
     clientName: varchar("client_name", { length: 255 }).notNull(),
     clientEmail: varchar("client_email", { length: 255 }),
+    contactFirstName: varchar("contact_first_name", { length: 100 }),
     amount: bigint("amount", { mode: "number" }).notNull(), // pence
     issueDate: date("issue_date", { mode: "date" }).notNull(),
     dueDate: date("due_date", { mode: "date" }).notNull(),
