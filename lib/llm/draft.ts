@@ -1,5 +1,5 @@
 import "server-only";
-import { anthropicClient } from "@/lib/llm/anthropic";
+import { groqClient } from "@/lib/llm/groq";
 import { assembleChasePrompt, type VerifiedFacts } from "@/lib/prompt";
 import { env } from "@/lib/env";
 
@@ -15,37 +15,47 @@ const DRAFT_TOOL_NAME = "draft_chase_email";
 export async function generateChaseDraft(facts: VerifiedFacts): Promise<ChaseDraft> {
   const { system, user } = assembleChasePrompt(facts);
 
-  const response = await anthropicClient.messages.create({
-    model: env.ANTHROPIC_MODEL,
-    max_tokens: 1024,
-    system,
+  const response = await groqClient.chat.completions.create({
+    model: env.GROQ_MODEL,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
     tools: [
       {
-        name: DRAFT_TOOL_NAME,
-        description: "Submit the drafted payment chase email.",
-        input_schema: {
-          type: "object",
-          properties: {
-            subject: { type: "string", description: "The email subject line." },
-            body: { type: "string", description: "The email body text." },
+        type: "function",
+        function: {
+          name: DRAFT_TOOL_NAME,
+          description: "Submit the drafted payment chase email.",
+          parameters: {
+            type: "object",
+            properties: {
+              subject: { type: "string", description: "The email subject line." },
+              body: { type: "string", description: "The email body text." },
+            },
+            required: ["subject", "body"],
           },
-          required: ["subject", "body"],
         },
       },
     ],
-    tool_choice: { type: "tool", name: DRAFT_TOOL_NAME },
-    messages: [{ role: "user", content: user }],
+    tool_choice: { type: "function", function: { name: DRAFT_TOOL_NAME } },
   });
 
-  const toolUse = response.content.find(
-    (block): block is Extract<typeof block, { type: "tool_use" }> => block.type === "tool_use",
-  );
-  if (!toolUse) throw new Error("LLM did not return a tool_use block");
-
-  const input = toolUse.input as Partial<ChaseDraft>;
-  if (typeof input.subject !== "string" || typeof input.body !== "string") {
-    throw new Error("LLM tool_use input did not match the expected {subject, body} shape");
+  const toolCall = response.choices[0]?.message.tool_calls?.[0];
+  if (!toolCall || toolCall.function.name !== DRAFT_TOOL_NAME) {
+    throw new Error("LLM did not return the expected tool call");
   }
 
-  return { subject: input.subject, body: input.body };
+  let parsed: Partial<ChaseDraft>;
+  try {
+    parsed = JSON.parse(toolCall.function.arguments) as Partial<ChaseDraft>;
+  } catch {
+    throw new Error("LLM tool call arguments were not valid JSON");
+  }
+
+  if (typeof parsed.subject !== "string" || typeof parsed.body !== "string") {
+    throw new Error("LLM tool call input did not match the expected {subject, body} shape");
+  }
+
+  return { subject: parsed.subject, body: parsed.body };
 }

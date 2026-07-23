@@ -62,7 +62,7 @@ charged (see `lib/prompt.ts` and the backstop keyword guard in
   (`npm test`).
 - `/lib/repositories` — the only code that queries the database. Every
   function takes `organisationId` as its first argument.
-- `/lib/email`, `/lib/llm` — Resend and Anthropic wrappers. Not pure (they
+- `/lib/email`, `/lib/llm` — Resend and Groq wrappers. Not pure (they
   touch env/network), so they live outside `/lib`'s pure-function set, but
   are still only reachable through server actions in each route's
   `actions.ts` file, never directly from a page.
