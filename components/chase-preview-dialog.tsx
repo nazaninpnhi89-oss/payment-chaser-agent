@@ -36,29 +36,37 @@ export function ChasePreviewDialog({
 
   async function handleGenerate() {
     setIsGenerating(true);
-    const result = await generateDraftAction(invoiceId);
-    setIsGenerating(false);
-
-    if (!result.success) {
-      toast.error(result.error);
-      return;
+    try {
+      const result = await generateDraftAction(invoiceId);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      setDraft(result.draft);
+      setOpen(true);
+    } catch {
+      toast.error("Could not generate a draft — please try again.");
+    } finally {
+      setIsGenerating(false);
     }
-    setDraft(result.draft);
-    setOpen(true);
   }
 
   async function handleSend() {
     if (!draft) return;
     setIsSending(true);
-    const result = await sendChaseAction(invoiceId, draft);
-    setIsSending(false);
-
-    if (!result.success) {
-      toast.error(result.error);
-      return;
+    try {
+      const result = await sendChaseAction(invoiceId, draft);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(result.message);
+      setOpen(false);
+    } catch {
+      toast.error("Something went wrong — the email may not have been sent. Check the chase history.");
+    } finally {
+      setIsSending(false);
     }
-    toast.success(result.message);
-    setOpen(false);
   }
 
   return (

@@ -157,8 +157,11 @@ function parseDate(raw: string): Date | null {
     const month = Number(monthStr);
     const year = Number(yearStr);
     if (month < 1 || month > 12 || day < 1 || day > 31) return null;
-    const date = new Date(year, month - 1, day);
-    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    // UTC midnight, so the calendar date survives serialisation to the
+    // Postgres `date` column (drizzle sends toISOString()) on a server whose
+    // local timezone is ahead of UTC — e.g. UK time during BST.
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 || date.getUTCDate() !== day) {
       return null;
     }
     return date;

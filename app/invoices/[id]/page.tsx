@@ -7,6 +7,7 @@ import { TierBadge } from "@/components/tier-badge";
 import { InterestDisclaimer } from "@/components/interest-disclaimer";
 import { ChasePreviewDialog } from "@/components/chase-preview-dialog";
 import { ContactFirstNameField } from "@/components/contact-first-name-field";
+import { InvoiceStatusSelect } from "@/components/invoice-status-select";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -66,6 +67,10 @@ export default async function InvoiceDetailPage({
             <p className="font-medium">{invoice.chaseCount}</p>
           </div>
           <div>
+            <p className="text-muted-foreground">Status</p>
+            <InvoiceStatusSelect invoiceId={invoice.id} initialStatus={invoice.status} />
+          </div>
+          <div>
             <Label htmlFor="contact-first-name" className="text-muted-foreground">
               Contact first name
             </Label>
@@ -80,7 +85,7 @@ export default async function InvoiceDetailPage({
         totalPence={invoice.statutoryTotalPence}
       />
 
-      {invoice.tier !== null && (
+      {invoice.tier !== null && invoice.status === "outstanding" && (
         <ChasePreviewDialog
           invoiceId={invoice.id}
           hasClientEmail={Boolean(invoice.clientEmail)}

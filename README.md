@@ -77,8 +77,8 @@ charged (see `lib/prompt.ts` and the backstop keyword guard in
   touch env/network), so they live outside `/lib`'s pure-function set, but
   are still only reachable through server actions in each route's
   `actions.ts` file, never directly from a page.
-- `/lib/env.ts` — the one place `process.env` is read. `grep -r process.env`
-  outside this file should return nothing.
+- `/lib/env.ts` — the one place the app reads `process.env` (the standalone
+  `scripts/` and Next's built-in `NODE_ENV` check aside).
 
 ## Multi-tenant readiness
 

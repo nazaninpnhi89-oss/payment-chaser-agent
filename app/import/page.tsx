@@ -91,9 +91,14 @@ export default function ImportPage() {
 
     setError(null);
     setIsImporting(true);
-    const result = await importCsvAction(step.csvText, step.mapping);
-    setIsImporting(false);
-    setStep({ kind: "done", result });
+    try {
+      const result = await importCsvAction(step.csvText, step.mapping);
+      setStep({ kind: "done", result });
+    } catch {
+      setError("Import failed — please try again.");
+    } finally {
+      setIsImporting(false);
+    }
   }
 
   return (

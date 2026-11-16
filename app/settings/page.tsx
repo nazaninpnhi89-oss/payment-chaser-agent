@@ -2,6 +2,9 @@ import { env } from "@/lib/env";
 import { getOrganisation } from "@/lib/repositories/organisationRepository";
 import { SettingsForm } from "@/components/settings-form";
 
+// Reads the database on every request — must never be prerendered at build time.
+export const dynamic = "force-dynamic";
+
 export default async function SettingsPage() {
   const organisation = await getOrganisation(env.DEFAULT_ORG_ID);
 

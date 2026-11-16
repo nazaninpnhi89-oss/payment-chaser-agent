@@ -20,6 +20,9 @@ export async function buildVerifiedFacts(invoiceId: string): Promise<BuildVerifi
   if (!invoiceView || invoiceView.tier === null) {
     return { success: false, error: "This invoice is not overdue and cannot be chased." };
   }
+  if (invoiceView.status !== "outstanding") {
+    return { success: false, error: "Only outstanding invoices can be chased." };
+  }
 
   const organisation = await getOrganisation(env.DEFAULT_ORG_ID);
 

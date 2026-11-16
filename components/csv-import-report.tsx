@@ -11,7 +11,11 @@ import type { ImportCsvState } from "@/app/import/actions";
 
 export function CsvImportReport({ state }: { state: ImportCsvState }) {
   const hasContent =
-    state.importedCount > 0 || state.errors.length > 0 || state.parseErrors.length > 0 || state.fatalError;
+    state.importedCount > 0 ||
+    state.duplicateInvoiceNumbers.length > 0 ||
+    state.errors.length > 0 ||
+    state.parseErrors.length > 0 ||
+    state.fatalError;
 
   if (!hasContent) return null;
 
@@ -24,13 +28,15 @@ export function CsvImportReport({ state }: { state: ImportCsvState }) {
         </Alert>
       )}
 
-      {(state.importedCount > 0 || state.errors.length > 0) && (
+      {!state.fatalError && (
         <Alert variant={state.errors.length > 0 ? "destructive" : "default"}>
           <AlertTitle>Import summary</AlertTitle>
           <AlertDescription>
             {state.importedCount} invoice{state.importedCount === 1 ? "" : "s"} imported
             {state.errors.length > 0 &&
               `, ${state.errors.length} row${state.errors.length === 1 ? "" : "s"} skipped`}
+            {state.duplicateInvoiceNumbers.length > 0 &&
+              `, ${state.duplicateInvoiceNumbers.length} already imported (${state.duplicateInvoiceNumbers.join(", ")})`}
             .
           </AlertDescription>
         </Alert>

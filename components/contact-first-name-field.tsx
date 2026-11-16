@@ -29,6 +29,7 @@ export function ContactFirstNameField({
 
   return (
     <Input
+      id="contact-first-name"
       value={value}
       onChange={(event) => setValue(event.target.value)}
       onBlur={handleBlur}

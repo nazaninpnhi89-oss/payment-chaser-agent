@@ -1,8 +1,13 @@
 "use server";
 
+import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { env } from "@/lib/env";
-import { getInvoiceView, updateInvoiceContactFirstName } from "@/lib/repositories/invoiceRepository";
+import {
+  getInvoiceView,
+  updateInvoiceContactFirstName,
+  updateInvoiceStatus,
+} from "@/lib/repositories/invoiceRepository";
 import { createChaseLog } from "@/lib/repositories/chaseLogRepository";
 import { getOrganisation } from "@/lib/repositories/organisationRepository";
 import { renderChaseEmail } from "@/lib/email/render";
@@ -38,6 +43,26 @@ export async function updateContactFirstNameAction(
   revalidatePath(`/invoices/${invoiceId}`);
 }
 
+const invoiceStatusSchema = z.enum(["outstanding", "paid", "disputed", "written_off"]);
+
+export type UpdateInvoiceStatusResult = { success: true } | { success: false; error: string };
+
+export async function updateInvoiceStatusAction(
+  invoiceId: string,
+  status: string,
+): Promise<UpdateInvoiceStatusResult> {
+  const parsed = invoiceStatusSchema.safeParse(status);
+  if (!parsed.success) return { success: false, error: "Unknown invoice status." };
+
+  const invoiceView = await getInvoiceView(env.DEFAULT_ORG_ID, invoiceId);
+  if (!invoiceView) return { success: false, error: "Invoice not found." };
+
+  await updateInvoiceStatus(env.DEFAULT_ORG_ID, invoiceId, parsed.data);
+  revalidatePath(`/invoices/${invoiceId}`);
+  revalidatePath("/");
+  return { success: true };
+}
+
 export type SendChaseResult =
   | { success: true; dispatched: boolean; message: string }
   | { success: false; error: string };
@@ -49,6 +74,9 @@ export async function sendChaseAction(
   const invoiceView = await getInvoiceView(env.DEFAULT_ORG_ID, invoiceId);
   if (!invoiceView || invoiceView.tier === null) {
     return { success: false, error: "This invoice is not overdue and cannot be chased." };
+  }
+  if (invoiceView.status !== "outstanding") {
+    return { success: false, error: "Only outstanding invoices can be chased." };
   }
   if (!invoiceView.clientEmail) {
     return { success: false, error: "This invoice has no client email on file." };

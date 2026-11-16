@@ -1,6 +1,7 @@
 import "server-only";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { env } from "@/lib/env";
 import * as schema from "@/lib/db/schema";
 
 /**
@@ -12,6 +13,6 @@ import * as schema from "@/lib/db/schema";
  * port 6543, or PgBouncer generally), which doesn't support prepared
  * statements — harmless against a direct connection too.
  */
-const client = postgres(process.env.DATABASE_URL as string, { prepare: false });
+const client = postgres(env.DATABASE_URL, { prepare: false });
 
 export const db = drizzle(client, { schema });

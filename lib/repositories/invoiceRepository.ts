@@ -9,6 +9,8 @@ import { BASE_RATE_PERCENT } from "@/lib/constants";
 import type { Invoice, InvoiceStatus, InvoiceView } from "@/lib/types";
 import type { NormalisedInvoiceInput } from "@/lib/csv";
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 type ChaseStats = { lastChasedAt: Date | null; chaseCount: number };
 
 async function getChaseStatsForInvoices(
@@ -24,7 +26,16 @@ async function getChaseStatsForInvoices(
       chaseCount: count(chaseLogs.id),
     })
     .from(chaseLogs)
-    .where(and(eq(chaseLogs.organisationId, organisationId), inArray(chaseLogs.invoiceId, invoiceIds)))
+    .where(
+      and(
+        eq(chaseLogs.organisationId, organisationId),
+        inArray(chaseLogs.invoiceId, invoiceIds),
+        // Only emails actually dispatched count as a chase — previews (sending
+        // disabled) and failed sends never reached the client, so counting them
+        // would make the next draft wrongly claim earlier reminders were sent.
+        eq(chaseLogs.status, "sent"),
+      ),
+    )
     .groupBy(chaseLogs.invoiceId);
 
   const map = new Map<string, ChaseStats>();
@@ -92,6 +103,10 @@ export async function getInvoiceView(
   organisationId: string,
   invoiceId: string,
 ): Promise<InvoiceView | null> {
+  // A malformed id (e.g. a hand-edited URL) is simply "not found", rather than
+  // a Postgres "invalid input syntax for type uuid" error and a 500 page.
+  if (!UUID_PATTERN.test(invoiceId)) return null;
+
   const [row] = await db
     .select()
     .from(invoices)
@@ -104,6 +119,20 @@ export async function getInvoiceView(
     chaseStatsByInvoice.get(row.id) ?? { lastChasedAt: null, chaseCount: 0 },
     new Date(),
   );
+}
+
+export async function listExistingInvoiceNumbers(
+  organisationId: string,
+  invoiceNumbers: string[],
+): Promise<Set<string>> {
+  if (invoiceNumbers.length === 0) return new Set();
+  const rows = await db
+    .select({ invoiceNumber: invoices.invoiceNumber })
+    .from(invoices)
+    .where(
+      and(eq(invoices.organisationId, organisationId), inArray(invoices.invoiceNumber, invoiceNumbers)),
+    );
+  return new Set(rows.map((row) => row.invoiceNumber));
 }
 
 export async function createInvoicesFromImport(

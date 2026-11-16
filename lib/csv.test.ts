@@ -126,8 +126,8 @@ describe("normaliseCsvRows", () => {
       row({ issueDate: "01/06/2026", dueDate: "05/07/2026" }),
     ]);
     expect(errors).toEqual([]);
-    expect(validRows[0]?.issueDate).toEqual(new Date(2026, 5, 1));
-    expect(validRows[0]?.dueDate).toEqual(new Date(2026, 6, 5));
+    expect(validRows[0]?.issueDate).toEqual(new Date(Date.UTC(2026, 5, 1)));
+    expect(validRows[0]?.dueDate).toEqual(new Date(Date.UTC(2026, 6, 5)));
   });
 
   it("rejects an impossible DD/MM/YYYY date", () => {

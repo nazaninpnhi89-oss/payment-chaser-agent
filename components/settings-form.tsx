@@ -14,14 +14,18 @@ export function SettingsForm({ organisation }: { organisation: Organisation }) {
 
   async function handleSubmit(formData: FormData) {
     setIsSaving(true);
-    const result = await updateSettingsAction(formData);
-    setIsSaving(false);
-
-    if (!result.success) {
-      toast.error(result.error);
-      return;
+    try {
+      const result = await updateSettingsAction(formData);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Settings saved.");
+    } catch {
+      toast.error("Settings could not be saved — please try again.");
+    } finally {
+      setIsSaving(false);
     }
-    toast.success("Settings saved.");
   }
 
   return (
