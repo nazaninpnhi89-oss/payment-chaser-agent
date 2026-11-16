@@ -96,3 +96,7 @@ npm test        # Vitest, runs the full /lib unit test suite
 npx tsc --noEmit
 npx eslint .
 ```
+
+## License
+
+[MIT](LICENSE) — free to use, modify, and distribute.
