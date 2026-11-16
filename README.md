@@ -4,6 +4,37 @@ Drafts payment-chasing emails for UK construction subcontractors, in a tone
 matched to how overdue an invoice is, and lets a human approve and send in one
 click.
 
+**Live demo:** https://payment-chaser-agent-bir3.vercel.app — runs in demo mode,
+so emails are drafted and previewed but never actually sent. Open any invoice
+and click **Generate chase email** to see the AI draft.
+
+![Dashboard](docs/dashboard.png)
+
+## What it does
+
+- **Import any CSV**: a column-mapping step handles exports from any
+  accounting tool, whatever its column names, and reads UK `DD/MM/YYYY` dates.
+  Re-importing never creates duplicate invoices.
+- **Escalating tone**: each overdue invoice gets a tier (Gentle 1–14 days,
+  Firm 15–30, Formal 31–60, Final 60+), and the LLM drafts an email in that
+  register. Banned-phrase checks and a forced tool-call response keep drafts
+  concrete and well-formed.
+- **Human in the loop**: nothing is sent automatically. Every draft is
+  previewed, can be edited or redrafted, and is sent only on approval.
+- **Safety rails**: a global `SENDING_ENABLED` kill switch, a
+  `TEST_REDIRECT_EMAIL` override, and a keyword guard that blocks any draft
+  stating statutory interest *will* be charged.
+- **Statutory interest**: an indicative calculation under the Late Payment of
+  Commercial Debts (Interest) Act 1998, always labelled as not legal advice.
+- **Weekly nudge**: a cron job emails the business owner a summary of what
+  needs chasing. It never emails clients.
+
+![Invoice detail](docs/invoice.png)
+
+**Stack:** Next.js 15 (App Router, Server Actions) · TypeScript · Postgres +
+Drizzle ORM · Groq (`openai/gpt-oss-20b`) · Resend · Tailwind CSS + shadcn/ui ·
+Vitest · deployed on Vercel.
+
 ## Getting started
 
 ```bash
@@ -19,11 +50,7 @@ Requires a Postgres database reachable at `DATABASE_URL` — any standard
 Postgres works (local Postgres, Supabase, Neon, Vercel Postgres). The db
 client (`lib/db/client.ts`) just uses `postgres-js` against the connection
 string, with `prepare: false` set so it's also safe against a connection
-pooler (e.g. Supabase's "Transaction" pooler on port 6543). This was not
-available to verify end-to-end in the environment this was built in — walk
-the golden path yourself before considering the app done: import a CSV,
-confirm the dashboard shows correct tiers/amounts, generate a draft, preview
-it, and test both `SENDING_ENABLED` states.
+pooler (e.g. Supabase's "Transaction" pooler on port 6543).
 
 ## Try it with sample data
 
