@@ -5,8 +5,15 @@
  * edits) don't always comply — this is what actually guarantees the shape
  * before the body is displayed, stored, or sent.
  */
-export function normalizeChaseEmailBody(rawBody: string, senderName: string): string {
-  const trimmedSenderName = senderName.trim();
+export function normalizeChaseEmailBody(rawBody: string, signOff: string): string {
+  // `signOff` is the organisation's configured sign-off (e.g. "Kind regards,\nAlex")
+  // or, when none is set, just the sender's name. Its final non-empty line is
+  // the name the email must end on.
+  const signOffLines = signOff
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "");
+  const trimmedSenderName = signOffLines[signOffLines.length - 1] ?? "";
 
   let body = rawBody
     .replace(/\r\n/g, "\n")
@@ -27,7 +34,13 @@ export function normalizeChaseEmailBody(rawBody: string, senderName: string): st
 
   // Locate the sign-off block: the line matching the sender's name, plus an
   // optional closing word directly above it (e.g. "Kind regards,").
-  const senderLineIndex = lines.findIndex((line) => line.trim() === trimmedSenderName);
+  let senderLineIndex = -1;
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    if ((lines[index] ?? "").trim() === trimmedSenderName) {
+      senderLineIndex = index;
+      break;
+    }
+  }
   if (senderLineIndex > 0) {
     let signOffStart = senderLineIndex;
     if (signOffStart - 1 >= 0 && (lines[signOffStart - 1] ?? "").trim() !== "") {
@@ -36,8 +49,8 @@ export function normalizeChaseEmailBody(rawBody: string, senderName: string): st
     if (signOffStart > 0 && (lines[signOffStart - 1] ?? "").trim() !== "") {
       lines.splice(signOffStart, 0, "");
     }
-  } else if (trimmedSenderName !== "") {
-    lines.push("", trimmedSenderName);
+  } else if (signOffLines.length > 0) {
+    lines.push("", ...signOffLines);
   }
 
   body = lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();

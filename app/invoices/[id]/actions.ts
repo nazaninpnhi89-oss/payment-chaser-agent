@@ -85,7 +85,10 @@ export async function sendChaseAction(
   const organisation = await getOrganisation(env.DEFAULT_ORG_ID);
   // Re-normalise here too, not just at generation time — the user may have
   // hand-edited the body in the preview textarea before approving it.
-  const normalisedBody = normalizeChaseEmailBody(draft.body, organisation.senderName);
+  const normalisedBody = normalizeChaseEmailBody(
+    draft.body,
+    organisation.emailSignOff ?? organisation.senderName,
+  );
   const { bodyHtml, bodyText } = renderChaseEmail(normalisedBody);
 
   const result = await sendChaseEmail({

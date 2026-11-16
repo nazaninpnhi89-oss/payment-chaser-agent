@@ -11,7 +11,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1),
   DEFAULT_ORG_ID: z.string().min(1),
   GROQ_API_KEY: z.string().min(1),
-  GROQ_MODEL: z.string().min(1).default("llama-3.3-70b-versatile"),
+  GROQ_MODEL: z.string().min(1).default("openai/gpt-oss-20b"),
   RESEND_API_KEY: z.string().min(1),
   RESEND_FROM_EMAIL: z.string().min(1),
   SENDING_ENABLED: z

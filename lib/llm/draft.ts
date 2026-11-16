@@ -9,7 +9,15 @@ export type ChaseDraft = { subject: string; body: string };
 
 const DRAFT_TOOL_NAME = "draft_chase_email";
 const TEMPERATURE = 0.7;
-const MAX_TOKENS = 500;
+// Generous ceiling: reasoning models (e.g. openai/gpt-oss-*) spend part of the
+// completion budget thinking before they call the tool. The email itself is
+// kept short by the prompt's length instructions, not by this cap.
+const MAX_TOKENS = 2048;
+
+/** Reasoning models need a low effort hint so they reliably emit the tool call. */
+function reasoningOptions(model: string): { reasoning_effort?: "low" } {
+  return model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {};
+}
 
 const DRAFT_TOOL = {
   type: "function" as const,
@@ -63,6 +71,7 @@ export async function generateChaseDraft(facts: VerifiedFacts): Promise<ChaseDra
     model: env.GROQ_MODEL,
     temperature: TEMPERATURE,
     max_tokens: MAX_TOKENS,
+    ...reasoningOptions(env.GROQ_MODEL),
     messages: [
       { role: "system", content: system },
       { role: "user", content: user },
@@ -74,13 +83,14 @@ export async function generateChaseDraft(facts: VerifiedFacts): Promise<ChaseDra
   const draft = parseToolCall(response);
   const check = checkBannedPhrases(`${draft.subject}\n${draft.body}`);
   if (check.ok) {
-    return { ...draft, body: normalizeChaseEmailBody(draft.body, facts.senderName) };
+    return { ...draft, body: normalizeChaseEmailBody(draft.body, facts.emailSignOff ?? facts.senderName) };
   }
 
   const retryResponse = await groqClient.chat.completions.create({
     model: env.GROQ_MODEL,
     temperature: TEMPERATURE,
     max_tokens: MAX_TOKENS,
+    ...reasoningOptions(env.GROQ_MODEL),
     messages: [
       { role: "system", content: system },
       { role: "user", content: user },
@@ -94,5 +104,5 @@ export async function generateChaseDraft(facts: VerifiedFacts): Promise<ChaseDra
   });
 
   const retryDraft = parseToolCall(retryResponse);
-  return { ...retryDraft, body: normalizeChaseEmailBody(retryDraft.body, facts.senderName) };
+  return { ...retryDraft, body: normalizeChaseEmailBody(retryDraft.body, facts.emailSignOff ?? facts.senderName) };
 }

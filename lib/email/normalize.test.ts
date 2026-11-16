@@ -58,4 +58,14 @@ describe("normalizeChaseEmailBody", () => {
     const result = normalizeChaseEmailBody("Hi,\n\nBody text with no sign-off at all.", "Alex");
     expect(result).toBe("Hi,\n\nBody text with no sign-off at all.\n\nAlex\n");
   });
+
+  it("does not duplicate the name when a custom multi-line sign-off is used", () => {
+    const result = normalizeChaseEmailBody("Hi Sam,\n\nBody.\n\nKind regards,\nAlex", "Kind regards,\nAlex");
+    expect(result).toBe("Hi Sam,\n\nBody.\n\nKind regards,\nAlex\n");
+  });
+
+  it("appends the full custom sign-off when the model omits it", () => {
+    const result = normalizeChaseEmailBody("Hi Sam,\n\nBody.", "Kind regards,\nAlex");
+    expect(result).toBe("Hi Sam,\n\nBody.\n\nKind regards,\nAlex\n");
+  });
 });
