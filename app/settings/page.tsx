@@ -9,14 +9,16 @@ export default async function SettingsPage() {
   const organisation = await getOrganisation(env.DEFAULT_ORG_ID);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground">
-          These details are used as sender information and context in every chase email drafted.
+        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Your business details. They&apos;re used as the sender and sign-off in every reminder drafted.
         </p>
       </div>
-      <SettingsForm organisation={organisation} />
+      <div className="rounded-2xl border bg-card p-6 shadow-xs">
+        <SettingsForm organisation={organisation} />
+      </div>
     </div>
   );
 }

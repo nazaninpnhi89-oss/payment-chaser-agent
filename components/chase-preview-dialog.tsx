@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { Send, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -71,8 +72,9 @@ export function ChasePreviewDialog({
 
   return (
     <>
-      <Button onClick={handleGenerate} disabled={isGenerating || !hasClientEmail}>
-        {isGenerating ? "Drafting..." : "Generate chase email"}
+      <Button onClick={handleGenerate} disabled={isGenerating || !hasClientEmail} size="lg" className="w-full">
+        <Sparkles />
+        {isGenerating ? "Drafting with AI..." : "Generate chase email"}
       </Button>
       {!hasClientEmail && (
         <p className="mt-2 text-xs text-muted-foreground">
@@ -126,7 +128,12 @@ export function ChasePreviewDialog({
           )}
 
           <DialogFooter>
+            <Button variant="outline" onClick={handleGenerate} disabled={isGenerating || isSending}>
+              <Sparkles />
+              {isGenerating ? "Redrafting..." : "Redraft"}
+            </Button>
             <Button onClick={handleSend} disabled={isSending || !draft}>
+              <Send />
               {isSending ? "Sending..." : "Approve & send"}
             </Button>
           </DialogFooter>

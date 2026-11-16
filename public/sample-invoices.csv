@@ -1,0 +1,6 @@
+Invoice No,Customer,Contact Email,First Name,Total,Invoice Date,Due Date,Notes
+INV-2041,Hartley Construction Ltd,accounts@hartley-construction.example,Sarah,"£4,850.00",08/10/2026,07/11/2026,First fix electrics - Plot 14
+INV-2033,Northgate Developments,ap@northgate-dev.example,James,"£12,750.50",25/09/2026,25/10/2026,Phase 2 containment and cabling
+INV-2019,Bramwell & Sons Builders,finance@bramwell.example,Priya,"£3,120.00",31/08/2026,30/09/2026,Consumer unit upgrades x6
+INV-2004,Kestrel Property Group,payables@kestrel-pg.example,,"£28,900.00",30/07/2026,29/08/2026,Retention release - Block C
+INV-2050,Oakfield Homes,accounts@oakfield.example,Tom,"£6,400.00",28/10/2026,27/11/2026,Second fix - show home

@@ -29,7 +29,7 @@ export function SettingsForm({ organisation }: { organisation: Organisation }) {
   }
 
   return (
-    <form action={handleSubmit} className="max-w-lg space-y-4">
+    <form action={handleSubmit} className="space-y-5">
       <div className="space-y-2">
         <Label htmlFor="businessName">Business name</Label>
         <Input id="businessName" name="businessName" defaultValue={organisation.businessName} required />

@@ -1,32 +1,19 @@
-import { Badge } from "@/components/ui/badge";
 import type { Tier } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { TIER_META } from "@/components/tier-meta";
 
-const TIER_LABEL: Record<Tier, string> = {
-  gentle: "Gentle",
-  firm: "Firm",
-  formal: "Formal",
-  final: "Final",
-};
-
-const TIER_CLASSES: Record<Tier, string> = {
-  gentle: "bg-sky-100 text-sky-900 border-sky-200",
-  firm: "bg-amber-100 text-amber-900 border-amber-200",
-  formal: "bg-orange-100 text-orange-900 border-orange-200",
-  final: "bg-red-100 text-red-900 border-red-200",
-};
-
-export function TierBadge({ tier }: { tier: Tier | null }) {
-  if (!tier) {
-    return (
-      <Badge variant="outline" className="text-muted-foreground">
-        Not yet due
-      </Badge>
-    );
-  }
+export function TierBadge({ tier, className }: { tier: Tier | null; className?: string }) {
+  const meta = tier ? TIER_META[tier] : null;
   return (
-    <Badge variant="outline" className={cn("border", TIER_CLASSES[tier])}>
-      {TIER_LABEL[tier]}
-    </Badge>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset",
+        meta ? meta.badge : "bg-muted text-muted-foreground ring-border",
+        className,
+      )}
+    >
+      <span className={cn("size-1.5 rounded-full", meta ? meta.dot : "bg-muted-foreground/50")} />
+      {meta ? meta.label : "Not yet due"}
+    </span>
   );
 }
