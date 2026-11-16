@@ -25,6 +25,14 @@ the golden path yourself before considering the app done: import a CSV,
 confirm the dashboard shows correct tiers/amounts, generate a draft, preview
 it, and test both `SENDING_ENABLED` states.
 
+## Try it with sample data
+
+`examples/sample-invoices.csv` is a small export with deliberately non-standard
+column names ("Invoice No", "Customer", "Total"…) and UK-format dates. Upload
+it on the Import page to see the column-mapping step, then open an invoice and
+click **Generate chase email**. All addresses use the reserved `.example`
+domain, so nothing can be delivered even if sending is enabled.
+
 ## Environment variables
 
 See `.env.example`. Notable ones:
