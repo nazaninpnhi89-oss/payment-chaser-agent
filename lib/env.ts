@@ -29,7 +29,7 @@ const envSchema = z.object({
   CRON_SECRET: z.string().min(1),
 });
 
-export const env = envSchema.parse({
+const parsed = envSchema.safeParse({
   DATABASE_URL: process.env.DATABASE_URL,
   DEFAULT_ORG_ID: process.env.DEFAULT_ORG_ID,
   GROQ_API_KEY: process.env.GROQ_API_KEY,
@@ -41,3 +41,15 @@ export const env = envSchema.parse({
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   CRON_SECRET: process.env.CRON_SECRET,
 });
+
+if (!parsed.success) {
+  // Name the offending variables plainly, so a failed deploy log says exactly
+  // what to add in the hosting provider's settings instead of a raw Zod dump.
+  const names = [...new Set(parsed.error.issues.map((issue) => String(issue.path[0])))];
+  throw new Error(
+    `Missing or invalid environment variables: ${names.join(", ")}. ` +
+      "Set them in .env.local (local) or your hosting provider's Environment Variables (deploys). See .env.example.",
+  );
+}
+
+export const env = parsed.data;
