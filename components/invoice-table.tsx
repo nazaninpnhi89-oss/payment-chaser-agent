@@ -54,11 +54,11 @@ export function InvoiceTable({ invoices }: { invoices: InvoiceView[] }) {
           <thead className="border-b bg-muted/50 text-left text-xs font-medium text-muted-foreground">
             <tr>
               <th className="px-4 py-3 font-medium">Client</th>
-              <th className="px-4 py-3 font-medium">Invoice</th>
+              <th className="hidden px-4 py-3 font-medium md:table-cell">Invoice</th>
               <th className="px-4 py-3 text-right font-medium">Amount</th>
-              <th className="px-4 py-3 text-right font-medium">Overdue</th>
+              <th className="px-4 py-3 text-right font-medium whitespace-nowrap">Overdue</th>
               <th className="px-4 py-3 font-medium">Tier</th>
-              <th className="px-4 py-3 font-medium">Last chased</th>
+              <th className="hidden px-4 py-3 font-medium lg:table-cell">Last chased</th>
               <th className="px-4 py-3">
                 <span className="sr-only">Open</span>
               </th>
@@ -86,7 +86,7 @@ export function InvoiceTable({ invoices }: { invoices: InvoiceView[] }) {
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{invoice.invoiceNumber}</td>
+                <td className="hidden px-4 py-3 font-mono text-xs whitespace-nowrap text-muted-foreground md:table-cell">{invoice.invoiceNumber}</td>
                 <td className="tabular px-4 py-3 text-right font-medium">{formatPence(invoice.amount)}</td>
                 <td className={cn("tabular px-4 py-3 text-right font-medium", daysClass(invoice.daysOverdue))}>
                   {invoice.daysOverdue > 0 ? `${invoice.daysOverdue}d` : "—"}
@@ -94,7 +94,7 @@ export function InvoiceTable({ invoices }: { invoices: InvoiceView[] }) {
                 <td className="px-4 py-3">
                   <TierBadge tier={invoice.tier} />
                 </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">
+                <td className="hidden px-4 py-3 text-xs whitespace-nowrap text-muted-foreground lg:table-cell">
                   {invoice.chaseCount > 0
                     ? `${invoice.lastChasedAt?.toLocaleDateString("en-GB")} · ${invoice.chaseCount}×`
                     : "Never"}

@@ -21,9 +21,9 @@ const STATUS_STYLES: Record<string, string> = {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <div className="mt-1 text-sm font-medium">{children}</div>
+      <div className="mt-1 min-w-0 text-sm font-medium">{children}</div>
     </div>
   );
 }
@@ -80,7 +80,9 @@ export default async function InvoiceDetailPage({
               <Field label="Due date">{invoice.dueDate.toLocaleDateString("en-GB")}</Field>
               <Field label="Times chased">{invoice.chaseCount}</Field>
               <Field label="Client email">
-                <span className="break-all">{invoice.clientEmail ?? "Not on file"}</span>
+                <span className="block truncate" title={invoice.clientEmail ?? undefined}>
+                  {invoice.clientEmail ?? "Not on file"}
+                </span>
               </Field>
               <div>
                 <Label htmlFor="contact-first-name" className="text-xs font-medium text-muted-foreground">

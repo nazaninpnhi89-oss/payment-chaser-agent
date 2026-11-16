@@ -34,7 +34,8 @@ export function ContactFirstNameField({
       onChange={(event) => setValue(event.target.value)}
       onBlur={handleBlur}
       disabled={isSaving}
-      placeholder='Not set — emails will open with a plain "Hi"'
+      placeholder="e.g. Sarah"
+      title='Used in the greeting. If empty, emails open with a plain "Hi"'
       className="h-8"
     />
   );
